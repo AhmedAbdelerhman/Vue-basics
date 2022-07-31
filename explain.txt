@@ -1,0 +1,208 @@
+1- go to main.js 
+ //mount 
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import PrimeVue from 'primevue/config';
+import store from './store/store';
+import "primevue/resources/themes/saga-blue/theme.css"       //theme
+import "primevue/resources/primevue.min.css"           //core css
+import "primeicons/primeicons.css"      
+
+ 
+createApp(App).use(router).use(store).use(PrimeVue).mount('#app') // mount store
+
+2- make store file and store .js
+    state: {  // init state 
+     mutations: {  // mutations you can use it in sync code 
+    actions: {   // actions you can use it in async code  
+     getters:{  // getter use state after making some logic or calculation 
+
+
+
+import { createStore } from "vuex";
+import { counter } from "./modules/counter";
+
+export default createStore({
+ 
+   
+    state: {  // init state 
+        counter: 1,
+        colorCode:"red"
+      },
+      mutations: {  // mutations you can use it in sync code 
+        increment(state, payload) {  //used by action below
+          state.counter+=payload;
+        },
+        decrement(state ,payload) {   //used by action below
+            state.counter -=payload
+         },
+         setColorCode(state , payload){    //used by computed in app.vue file
+            state.colorCode = payload
+         }
+      },
+      actions: {   // actions you can use it in async code  
+        decrement({commit}) { // destructure  commit 
+          fetch(
+            "https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new"
+          )
+            .then((result) => {
+              return result.json();
+            })
+            .then((random) => {
+    
+                commit("decrement",random ) // pass payload and the mutations name 
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+             
+      },
+      getters:{  // getter use state after making some logic or calculation 
+        squared(state){
+    return state.counter*state.counter
+        },
+    
+        activeIndexes:(state)=>(payload)=>{ //if i want to enter a data to getter and use it in the logic
+            //u should return a payload https://www.youtube.com/watch?v=y7DQhNs9Azw&t=3256s&ab_channel=LaithAcademy
+        let indexes=[];
+       state.history.forEach((number,index)=>{
+            if(number === payload){
+                indexes.push(index)
+           }
+       });
+        return indexes
+      }
+    },
+    
+});
+
+
+
+3- dispatch action
+$store.state.colorCode// get the state 
+
+     {{$store.getters.squared}}  //get the getter
+       <button @click="$store.dispatch('decrement')">-</button>  //dispatch actions 
+
+
+<template>
+ <div>
+   <div  :style="{color :$store.state.colorCode}" class="counter"> // get the state 
+     {{counter.counter }}
+     
+     <sup>2</sup> =
+     {{$store.getters.squared}}  //get the getter
+   </div>
+     <div class="buttons">
+       <button @click="$store.dispatch('decrement')">-</button>  //dispatch actions 
+       <button @click="$store.dispatch('increments')">+</button>
+     </div>
+     <input v-model="colorCode" type="text">  //use computed to get colorCode from store  
+ </div>
+</template>
+<script>
+import { mapState } from 'vuex';
+
+export default {
+  components: {},
+computed:{
+  ...mapState(["counter"]), //get counter directly instate of $store.state.counter
+  colorCode:{
+    get(){  // get is a keyword
+ return this.$store.state.counter.colorCode
+    },
+set(value){  //set is a keyword inside computed
+
+this.$store.commit("setColorCode",value)
+
+}
+
+  }
+},
+  methods: {},
+};
+</script>
+
+
+***************** use modules ******************
+in the store.js
+
+
+import { createStore } from "vuex";
+import { counter } from "./modules/counter"; // import counter destructure 
+
+export default createStore({
+ 
+modules:{
+  counter   // the vuex model
+}
+});
+
+
+2- make a counter.js file 
+
+export const counter ={
+
+
+    state: {
+        counter: 1,
+        colorCode:"red"
+      },
+      mutations: {
+        increment(state, payload) {  //used by action below
+          state.counter+=payload;
+        },
+        decrement(state ,payload) {   //used by action below
+            state.counter -=payload
+         },
+         setColorCode(state , payload){    //used by computed in app.vue file
+            state.colorCode = payload
+         }
+      },
+      actions: {
+        decrement({commit}) {
+          fetch(
+            "https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new"
+          )
+            .then((result) => {
+              return result.json();
+            })
+            .then((random) => {
+    
+                commit("decrement",random )
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+          
+      },
+      getters:{  // getter use state after making some logic or calculation 
+        squared(state){
+    return state.counter*state.counter
+        },
+    
+    
+    
+        activeIndexes:(state)=>(payload)=>{ //if i want to enter a data to getter and use it in the logic
+            //u should return a payload https://www.youtube.com/watch?v=y7DQhNs9Azw&t=3256s&ab_channel=LaithAcademy
+        let indexes=[];
+       state.history.forEach((number,index)=>{
+            if(number === payload){
+                indexes.push(index)
+           }
+       });
+        return indexes
+      }
+    },
+    
+}
+
+
+3 - add the model name in the path of get data 
+
+ex 
+   <div  :style="{color :$store.state.counter.colorCode}" class="counter"> // counter is the model 
+   //name that hold the state model
